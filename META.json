@@ -1,0 +1,44 @@
+{
+   "abstract" : "Interface to Amazon's Route 53",
+   "author" : [
+      "Marco Fontani"
+   ],
+   "dynamic_config" : 0,
+   "generated_by" : "Dist::Zilla version 4.200000, CPAN::Meta::Converter version 2.102400",
+   "license" : [
+      "perl_5"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : "2"
+   },
+   "name" : "Net-Amazon-Route53",
+   "prereqs" : {
+      "configure" : {
+         "requires" : {
+            "ExtUtils::MakeMaker" : "6.31"
+         }
+      },
+      "runtime" : {
+         "requires" : {
+            "Digest::HMAC_SHA1" : 0,
+            "FindBin" : 0,
+            "Getopt::Long" : 0,
+            "HTTP::Request" : 0,
+            "LWP::UserAgent" : 0,
+            "MIME::Base64" : 0,
+            "Mouse" : 0,
+            "Pod::Usage" : 0,
+            "XML::Bare" : 0
+         }
+      },
+      "test" : {
+         "requires" : {
+            "Test::More" : 0
+         }
+      }
+   },
+   "release_status" : "stable",
+   "version" : "0.110090"
+}
+

@@ -1,0 +1,15 @@
+LICENSE
+MANIFEST
+META.json
+META.yml
+Makefile.PL
+README
+README.mkd
+bin/route53
+dist.ini
+lib/Net/Amazon/Route53.pm
+lib/Net/Amazon/Route53/Change.pm
+lib/Net/Amazon/Route53/HostedZone.pm
+lib/Net/Amazon/Route53/ResourceRecordSet.pm
+t/release-pod-coverage.t
+t/release-pod-syntax.t
