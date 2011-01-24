@@ -3,7 +3,7 @@ use warnings;
 
 package Net::Amazon::Route53::ResourceRecordSet;
 BEGIN {
-  $Net::Amazon::Route53::ResourceRecordSet::VERSION = '0.110090';
+  $Net::Amazon::Route53::ResourceRecordSet::VERSION = '0.110240';
 }
 use Mouse;
 use XML::Bare;
@@ -75,8 +75,7 @@ Returns a L<Net::Amazon::Route53::Change> object representing the change request
 
 =cut
 
-sub create
-{
+sub create {
     my $self = shift;
     my $wait = shift;
     $wait = 0 if !defined $wait;
@@ -144,8 +143,7 @@ Returns a L<Net::Amazon::Route53::Change> object representing the change request
 
 =cut
 
-sub delete
-{
+sub delete {
     my $self = shift;
     my $wait = shift;
     $wait = 0 if !defined $wait;

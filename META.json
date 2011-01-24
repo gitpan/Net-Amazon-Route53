@@ -4,7 +4,7 @@
       "Marco Fontani"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Dist::Zilla version 4.200000, CPAN::Meta::Converter version 2.102400",
+   "generated_by" : "Dist::Zilla version 4.200001, CPAN::Meta::Converter version 2.102400",
    "license" : [
       "perl_5"
    ],
@@ -39,6 +39,16 @@
       }
    },
    "release_status" : "stable",
-   "version" : "0.110090"
+   "resources" : {
+      "bugtracker" : {
+         "web" : "https://github.com/mfontani/Net-Amazon-Route53/issues"
+      },
+      "repository" : {
+         "type" : "git",
+         "url" : "git://github.com/mfontani/Net-Amazon-Route53.git",
+         "web" : "https://github.com/mfontani/Net-Amazon-Route53"
+      }
+   },
+   "version" : "0.110240"
 }
 

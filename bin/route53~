@@ -53,7 +53,7 @@ pod2usage( -exitstatus => 0, -verbose => 2 ) if $man;
 
 pod2usage("Either provide a keyname/keyfile, or a key/id\n") if ( !length $keyname and ( !length $key or !length $id ) );
 if ( length $keyname ) {
-    pod2usage("Need a keyfile when a keyname is given\n") if ( !length $keyfile );
+    die("Need a keyfile when a keyname is given\n") if ( !length $keyfile );
     die("No such keyfile: $keyfile\n") if ( !-f $keyfile );
     my $keyfile_contents = do {
         local $/;
@@ -72,7 +72,7 @@ if ( length $keyname ) {
     $keyfile = $keyname = '';
 }
 if ( length $key or length $id ) {
-    pod2usage("Both id and key must be given\n") if ( !length $key or !length $id );
+    die("Both id and key must be given\n") if ( !length $key or !length $id );
 }
 
 pod2usage("Need an action") if ( !@ARGV );
@@ -84,8 +84,8 @@ my %actions = (
     'record'      => \&do_record,
 );
 my $action = shift @ARGV;
-pod2usage("Need an action\nUse route53 --help to list the allowed actions") unless defined $action;
-pod2usage("Unrecognised action: $action\nUse route53 --help to list the allowed actions")unless exists $actions{$action};
+die "Need an action\nUse route53 --help to list the allowed actions\n" unless defined $action;
+die "Unrecognised action: $action\nUse route53 --help to list the allowed actions\n" unless exists $actions{$action};
 
 my $route53 = Net::Amazon::Route53->new( id => $id, key => $key );
 
@@ -196,9 +196,11 @@ sub do_record
             if ( @{$options{value}} and @{$options{value}} > 0 ) {
                 next if !scalar grep { my $v = $_; scalar grep { $_ eq $v } @{$options{value}} } @{ $rrs->values };
             }
-            next if $options{name} and $rrs->name ne $options{name};
+            my $name = $rrs->name;
+            $name =~ s/\\052/\*/g;
+            next if $options{name} and $name ne $options{name};
             $output .= sprintf("%s %s %s %s\n",
-                $rrs->name,
+                $name,
                 $rrs->type,
                 $rrs->ttl,
                 join(' ', @{$rrs->values}),
@@ -225,7 +227,9 @@ sub do_record
         die "Too many records match:\n", join(
             "\n",
             map {
-                sprintf( "%s %s %s %s", $_->name, $_->type, $_->ttl, join( ' ', @{ $_->values } ) )
+                my $name = $_->name;
+                $name =~ s/\\052/\*/g;
+                sprintf( "%s %s %s %s", $name, $_->type, $_->ttl, join( ' ', @{ $_->values } ) )
               } @records
           ),
           "\n"
@@ -390,9 +394,6 @@ If a C<--name> is given, it lists only the records which have the given name.
 If a C<--ttl> is given, it lists only the records which have the given TTL.
 If a C<--value> is given, it lists only the records which have a value matching the given one.
 
-Wildcard records (i.e. C<*.example.com>) are displayed as C<\052.example.com>.
-The same format must be used to create a wildcard record.
-
 =item B<delete>
 
 Deletes one DNS record for the zone given. Can only delete a record which
@@ -445,7 +446,7 @@ Lists the zones names, ids and comments:
 
 =head2 Get all nameservers (and details) for all zones
 
-Displays a verbose list of the zone details and the nameservers
+Displayes a verbose list of the zone details and the nameservers
 which are authoritative for the zone:
 
     $ route53 --keyname my-aws-account nameservers
@@ -514,32 +515,32 @@ Lists all DNS records for a zone:
     example.com. MX 14400 127.0.0.1
     example.com. NS 172800 ns-123.awsdns-123.com. ns-123.awsdns-123.co.uk. ns-123.awsdns-123.org.
     example.com. SOA 900 ns-123.awsdns-123.com. awsdns-hostmaster.amazon.com. 1 7200 900 1209600 86400
-    \052.example.com. A 300 127.0.0.1
+    *.example.com. A 300 127.0.0.1
 
 You can optionally specify C<--type> to display only DNS records of a given type:
 
     $ route53 --keyname my-aws-account record list example.com. --type A
     example.com. A 14400 127.0.0.1
-    \052.example.com. A 300 127.0.0.1
+    *.example.com. A 300 127.0.0.1
 
 =head2 Delete a specific DNS record for a zone
 
-This example assumes we want to remove the C<\052.example.com.> entry.  One can
+This example assumes we want to remove the C<*.example.com.> entry.  One can
 check which parameters are needed to get the correct entry with the
 C<record list> first:
 
     $ route53 --keyname my-aws-account record list example.com. --type A
     example.com. A 14400 127.0.0.1
-    \052.example.com. A 300 127.0.0.1
+    *.example.com. A 300 127.0.0.1
     $ route53 --keyname my-aws-account record list example.com. --type A --ttl 300
-    \052.example.com. A 300 127.0.0.1
+    *.example.com. A 300 127.0.0.1
 
 Or can read the error message given in case there are too many matching records:
 
     $ route53 --keyname my-aws-account record delete example.com. --type A
     Too many records match:
     example.com. A 14400 127.0.0.1
-    \052.example.com. A 300 127.0.0.1
+    *.example.com. A 300 127.0.0.1
 
 The lone record deletion:
 

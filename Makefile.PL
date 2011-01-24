@@ -19,7 +19,8 @@ my %WriteMakefileArgs = (
   },
   'DISTNAME' => 'Net-Amazon-Route53',
   'EXE_FILES' => [
-    'bin/route53'
+    'bin/route53',
+    'bin/route53~'
   ],
   'LICENSE' => 'perl',
   'NAME' => 'Net::Amazon::Route53',
@@ -34,7 +35,7 @@ my %WriteMakefileArgs = (
     'Pod::Usage' => '0',
     'XML::Bare' => '0'
   },
-  'VERSION' => '0.110090',
+  'VERSION' => '0.110240',
   'test' => {
     'TESTS' => 't/*.t'
   }

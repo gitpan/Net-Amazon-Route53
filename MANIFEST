@@ -1,3 +1,4 @@
+Changes
 LICENSE
 MANIFEST
 META.json
@@ -6,10 +7,12 @@ Makefile.PL
 README
 README.mkd
 bin/route53
+bin/route53~
 dist.ini
 lib/Net/Amazon/Route53.pm
 lib/Net/Amazon/Route53/Change.pm
 lib/Net/Amazon/Route53/HostedZone.pm
 lib/Net/Amazon/Route53/ResourceRecordSet.pm
+t/00-load.t
 t/release-pod-coverage.t
 t/release-pod-syntax.t

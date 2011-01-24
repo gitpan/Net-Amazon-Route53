@@ -3,7 +3,7 @@ use warnings;
 
 package Net::Amazon::Route53::HostedZone;
 BEGIN {
-  $Net::Amazon::Route53::HostedZone::VERSION = '0.110090';
+  $Net::Amazon::Route53::HostedZone::VERSION = '0.110240';
 }
 use Mouse;
 
@@ -66,8 +66,9 @@ has 'nameservers' => (
     isa     => 'ArrayRef[Str]',
     lazy    => 1,
     default => sub {
-        my $self        = shift;
-        my $resp        = $self->route53->request( 'get', 'https://route53.amazonaws.com/2010-10-01/' . $self->id );
+        my $self = shift;
+        my $resp =
+          $self->route53->request( 'get', 'https://route53.amazonaws.com/2010-10-01/' . $self->id );
         my @nameservers = @{ $resp->{DelegationSet}{NameServers}{NameServer} };
         \@nameservers;
     }
@@ -86,8 +87,8 @@ has 'resource_record_sets' => (
     lazy    => 1,
     default => sub {
         my $self = shift;
-        my $resp =
-          $self->route53->request( 'get', 'https://route53.amazonaws.com/2010-10-01/' . $self->id . '/rrset' );
+        my $resp = $self->route53->request( 'get',
+            'https://route53.amazonaws.com/2010-10-01/' . $self->id . '/rrset' );
         my @resource_record_sets;
         for my $res ( @{ $resp->{ResourceRecordSets}{ResourceRecordSet} } ) {
             push @resource_record_sets,
@@ -126,8 +127,7 @@ Returns a L<Net::Amazon::Route53::Change> object representing the change request
 
 =cut
 
-sub create
-{
+sub create {
     my $self = shift;
     my $wait = shift;
     $wait = 0 if !defined $wait;
@@ -142,7 +142,8 @@ sub create
     </HostedZoneConfig>
 </CreateHostedZoneRequest>
 ENDXML
-    my $request_xml = sprintf( $request_xml_str, $self->name, $self->callerreference, $self->comment );
+    my $request_xml =
+      sprintf( $request_xml_str, $self->name, $self->callerreference, $self->comment );
     my $resp = $self->route53->request(
         'post',
         'https://route53.amazonaws.com/2010-10-01/hostedzone',
@@ -177,12 +178,12 @@ Returns a L<Net::Amazon::Route53::Change> object representing the change request
 
 =cut
 
-sub delete
-{
+sub delete {
     my $self = shift;
     my $wait = shift;
     $wait = 0 if !defined $wait;
-    my $resp = $self->route53->request( 'delete', 'https://route53.amazonaws.com/2010-10-01/' . $self->id, );
+    my $resp =
+      $self->route53->request( 'delete', 'https://route53.amazonaws.com/2010-10-01/' . $self->id, );
     my $change = Net::Amazon::Route53::Change->new(
         route53 => $self->route53,
         ( map { lc($_) => $resp->{ChangeInfo}{$_} } qw/Id Status SubmittedAt/ ),

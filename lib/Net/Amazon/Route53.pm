@@ -3,7 +3,7 @@ use warnings;
 
 package Net::Amazon::Route53;
 BEGIN {
-  $Net::Amazon::Route53::VERSION = '0.110090';
+  $Net::Amazon::Route53::VERSION = '0.110240';
 }
 use LWP::UserAgent;
 use HTTP::Request;
@@ -80,8 +80,7 @@ request. Dies on error, showing the request's error given by the API.
 
 =cut
 
-sub request
-{
+sub request {
     my $self   = shift;
     my $method = shift;
     my $uri    = shift;
@@ -102,9 +101,11 @@ sub request
     my $signature = encode_base64( $hmac->digest, '' );
 
     my %options = (
-        'Date' => $date,
-        'X-Amzn-Authorization' =>
-          sprintf( "AWS3-HTTPS AWSAccessKeyId=%s,Algorithm=HmacSHA1,Signature=%s", $self->id, $signature ),
+        'Date'                 => $date,
+        'X-Amzn-Authorization' => sprintf(
+            "AWS3-HTTPS AWSAccessKeyId=%s,Algorithm=HmacSHA1,Signature=%s",
+            $self->id, $signature
+        ),
         @_
     );
     my $content = delete $options{Content};
@@ -134,15 +135,14 @@ Takes an optional parameter indicating the name of the wanted hosted zone.
 
 =cut
 
-sub get_hosted_zones
-{
+sub get_hosted_zones {
     my $self         = shift;
     my $which        = shift;
     my $start_marker = '';
     my @zones;
     while (1) {
-        my $resp =
-          $self->request( 'get', 'https://route53.amazonaws.com/2010-10-01/hostedzone?maxitems=100' . $start_marker );
+        my $resp = $self->request( 'get',
+            'https://route53.amazonaws.com/2010-10-01/hostedzone?maxitems=100' . $start_marker );
         push @zones,
           (
             ref $resp->{HostedZones}{HostedZone} eq 'ARRAY'
