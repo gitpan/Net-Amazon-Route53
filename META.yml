@@ -26,4 +26,4 @@ requires:
 resources:
   bugtracker: https://github.com/mfontani/Net-Amazon-Route53/issues
   repository: git://github.com/mfontani/Net-Amazon-Route53.git
-version: 0.110240
+version: 0.110241

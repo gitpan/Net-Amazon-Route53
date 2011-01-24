@@ -3,7 +3,7 @@ use warnings;
 
 package Net::Amazon::Route53::ResourceRecordSet;
 BEGIN {
-  $Net::Amazon::Route53::ResourceRecordSet::VERSION = '0.110240';
+  $Net::Amazon::Route53::ResourceRecordSet::VERSION = '0.110241';
 }
 use Mouse;
 use XML::Bare;

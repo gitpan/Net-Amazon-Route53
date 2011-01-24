@@ -3,7 +3,7 @@ use warnings;
 
 package Net::Amazon::Route53;
 BEGIN {
-  $Net::Amazon::Route53::VERSION = '0.110240';
+  $Net::Amazon::Route53::VERSION = '0.110241';
 }
 use LWP::UserAgent;
 use HTTP::Request;
@@ -115,6 +115,7 @@ sub request {
         $content ? $content : undef,
     );
     my $rc = $self->ua->request($request);
+    die "Could not perform request $method on $uri: " . $rc->status_line unless $rc->is_success;
 
     #use YAML;warn "\n\nmethod $method to $uri @_: " . Dump($rc);
     my $resp = XML::Bare::xmlin( $rc->decoded_content );
@@ -157,7 +158,9 @@ sub get_hosted_zones {
           Net::Amazon::Route53::HostedZone->new(
             route53 => $self,
             ( map { lc($_) => $zone->{$_} } qw/Id Name CallerReference/ ),
-            comment => $zone->{Config}{Comment},
+            comment => ( exists $zone->{Config} and ref $zone->{Config} eq 'HASH' )
+            ? $zone->{Config}{Comment}
+            : '',
           );
     }
     @o_zones = grep { $_->name eq $which } @o_zones if $which;

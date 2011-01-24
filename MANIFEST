@@ -7,7 +7,6 @@ Makefile.PL
 README
 README.mkd
 bin/route53
-bin/route53~
 dist.ini
 lib/Net/Amazon/Route53.pm
 lib/Net/Amazon/Route53/Change.pm
