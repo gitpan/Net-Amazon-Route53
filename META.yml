@@ -7,7 +7,7 @@ build_requires:
 configure_requires:
   ExtUtils::MakeMaker: 6.31
 dynamic_config: 0
-generated_by: 'Dist::Zilla version 4.200001, CPAN::Meta::Converter version 2.102400'
+generated_by: 'Dist::Zilla version 4.200001, CPAN::Meta::Converter version 2.110240'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -17,6 +17,7 @@ requires:
   Digest::HMAC_SHA1: 0
   FindBin: 0
   Getopt::Long: 0
+  HTML::Entities: 0
   HTTP::Request: 0
   LWP::UserAgent: 0
   MIME::Base64: 0
@@ -26,4 +27,4 @@ requires:
 resources:
   bugtracker: https://github.com/mfontani/Net-Amazon-Route53/issues
   repository: git://github.com/mfontani/Net-Amazon-Route53.git
-version: 0.110241
+version: 0.110310

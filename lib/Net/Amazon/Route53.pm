@@ -3,7 +3,7 @@ use warnings;
 
 package Net::Amazon::Route53;
 BEGIN {
-  $Net::Amazon::Route53::VERSION = '0.110241';
+  $Net::Amazon::Route53::VERSION = '0.110310';
 }
 use LWP::UserAgent;
 use HTTP::Request;
@@ -115,7 +115,12 @@ sub request {
         $content ? $content : undef,
     );
     my $rc = $self->ua->request($request);
-    die "Could not perform request $method on $uri: " . $rc->status_line unless $rc->is_success;
+    die "Could not perform request $method on $uri: "
+      . $rc->status_line . "\n"
+      . $rc->decoded_content . "\n"
+      . "Original request: "
+      . ( defined $content ? $content : '' ) . "\n"
+      unless $rc->is_success;
 
     #use YAML;warn "\n\nmethod $method to $uri @_: " . Dump($rc);
     my $resp = XML::Bare::xmlin( $rc->decoded_content );

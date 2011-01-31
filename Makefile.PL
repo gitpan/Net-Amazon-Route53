@@ -27,6 +27,7 @@ my %WriteMakefileArgs = (
     'Digest::HMAC_SHA1' => '0',
     'FindBin' => '0',
     'Getopt::Long' => '0',
+    'HTML::Entities' => '0',
     'HTTP::Request' => '0',
     'LWP::UserAgent' => '0',
     'MIME::Base64' => '0',
@@ -34,7 +35,7 @@ my %WriteMakefileArgs = (
     'Pod::Usage' => '0',
     'XML::Bare' => '0'
   },
-  'VERSION' => '0.110241',
+  'VERSION' => '0.110310',
   'test' => {
     'TESTS' => 't/*.t'
   }

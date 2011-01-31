@@ -3,9 +3,10 @@ use warnings;
 
 package Net::Amazon::Route53::Change;
 BEGIN {
-  $Net::Amazon::Route53::Change::VERSION = '0.110241';
+  $Net::Amazon::Route53::Change::VERSION = '0.110310';
 }
 use Mouse;
+use HTML::Entities;
 
 =head2 SYNOPSIS
 
@@ -67,7 +68,7 @@ sub refresh {
       $self->route53->request( 'get', 'https://route53.amazonaws.com/2010-10-01/' . $self->id, );
     for (qw/Id Status SubmittedAt/) {
         my $method = lc $_;
-        $self->$method( $resp->{ChangeInfo}{$_} );
+        $self->$method( decode_entities( $resp->{ChangeInfo}{$_} ) );
     }
 }
 

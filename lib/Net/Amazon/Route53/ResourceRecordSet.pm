@@ -3,10 +3,11 @@ use warnings;
 
 package Net::Amazon::Route53::ResourceRecordSet;
 BEGIN {
-  $Net::Amazon::Route53::ResourceRecordSet::VERSION = '0.110241';
+  $Net::Amazon::Route53::ResourceRecordSet::VERSION = '0.110310';
 }
 use Mouse;
 use XML::Bare;
+use HTML::Entities;
 
 =head2 SYNOPSIS
 
@@ -104,7 +105,8 @@ sub create {
 </ChangeResourceRecordSetsRequest>
 ENDXML
     my $request_xml = sprintf( $request_xml_str,
-        $self->type, $self->name, $self->name, $self->type, $self->ttl,
+        map { $_ } $self->type,
+        $self->name, $self->name, $self->type, $self->ttl,
         join( "\n", map { "<Value>$_</Value>" } @{ $self->values } ) );
     my $resp = $self->route53->request(
         'post',
@@ -113,7 +115,7 @@ ENDXML
     );
     my $change = Net::Amazon::Route53::Change->new(
         route53 => $self->route53,
-        ( map { lc($_) => $resp->{ChangeInfo}{$_} } qw/Id Status SubmittedAt/ ),
+        ( map { lc($_) => decode_entities( $resp->{ChangeInfo}{$_} ) } qw/Id Status SubmittedAt/ ),
     );
     $change->refresh();
     return $change if !$wait;
@@ -171,8 +173,8 @@ sub delete {
 </ChangeResourceRecordSetsRequest>
 ENDXML
     my $request_xml = sprintf( $request_xml_str,
-        $self->type, $self->name, $self->name, $self->type, $self->ttl,
-        join( "\n", map { "<Value>$_</Value>" } @{ $self->values } ) );
+        ( map { $_ } ( $self->type, $self->name, $self->name, $self->type, $self->ttl ) ),
+        join( "\n", map { "<Value>" . $_ . "</Value>" } @{ $self->values } ) );
     my $resp = $self->route53->request(
         'post',
         'https://route53.amazonaws.com/2010-10-01/' . $self->hostedzone->id . '/rrset',
@@ -180,7 +182,7 @@ ENDXML
     );
     my $change = Net::Amazon::Route53::Change->new(
         route53 => $self->route53,
-        ( map { lc($_) => $resp->{ChangeInfo}{$_} } qw/Id Status SubmittedAt/ ),
+        ( map { lc($_) => decode_entities( $resp->{ChangeInfo}{$_} ) } qw/Id Status SubmittedAt/ ),
     );
     $change->refresh();
     return $change if !$wait;
