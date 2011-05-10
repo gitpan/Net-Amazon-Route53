@@ -4,7 +4,7 @@ use warnings;
 
 
 
-use ExtUtils::MakeMaker 6.31;
+use ExtUtils::MakeMaker 6.30;
 
 
 
@@ -15,7 +15,7 @@ my %WriteMakefileArgs = (
     'Test::More' => '0'
   },
   'CONFIGURE_REQUIRES' => {
-    'ExtUtils::MakeMaker' => '6.31'
+    'ExtUtils::MakeMaker' => '6.30'
   },
   'DISTNAME' => 'Net-Amazon-Route53',
   'EXE_FILES' => [
@@ -35,7 +35,7 @@ my %WriteMakefileArgs = (
     'Pod::Usage' => '0',
     'XML::Bare' => '0'
   },
-  'VERSION' => '0.110310',
+  'VERSION' => '0.111300',
   'test' => {
     'TESTS' => 't/*.t'
   }

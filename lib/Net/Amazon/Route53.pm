@@ -3,7 +3,7 @@ use warnings;
 
 package Net::Amazon::Route53;
 BEGIN {
-  $Net::Amazon::Route53::VERSION = '0.110310';
+  $Net::Amazon::Route53::VERSION = '0.111300';
 }
 use LWP::UserAgent;
 use HTTP::Request;
@@ -86,7 +86,8 @@ sub request {
     my $uri    = shift;
 
     return unless $method;
-    return unless ( $method eq 'get' or $method eq 'post' or $method eq 'delete' );
+    return
+      unless ( $method eq 'get' or $method eq 'post' or $method eq 'delete' );
     return unless $uri;
 
     # Get amazon server's date
@@ -148,7 +149,8 @@ sub get_hosted_zones {
     my @zones;
     while (1) {
         my $resp = $self->request( 'get',
-            'https://route53.amazonaws.com/2010-10-01/hostedzone?maxitems=100' . $start_marker );
+            'https://route53.amazonaws.com/2010-10-01/hostedzone?maxitems=100'
+              . $start_marker );
         push @zones,
           (
             ref $resp->{HostedZones}{HostedZone} eq 'ARRAY'
@@ -163,7 +165,8 @@ sub get_hosted_zones {
           Net::Amazon::Route53::HostedZone->new(
             route53 => $self,
             ( map { lc($_) => $zone->{$_} } qw/Id Name CallerReference/ ),
-            comment => ( exists $zone->{Config} and ref $zone->{Config} eq 'HASH' )
+            comment =>
+              ( exists $zone->{Config} and ref $zone->{Config} eq 'HASH' )
             ? $zone->{Config}{Comment}
             : '',
           );
