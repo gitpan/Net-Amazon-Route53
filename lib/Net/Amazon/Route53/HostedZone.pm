@@ -3,7 +3,7 @@ use warnings;
 
 package Net::Amazon::Route53::HostedZone;
 BEGIN {
-  $Net::Amazon::Route53::HostedZone::VERSION = '0.111300';
+  $Net::Amazon::Route53::HostedZone::VERSION = '0.113490';
 }
 use Mouse;
 use HTML::Entities;
@@ -29,7 +29,7 @@ to Amazon's Route 53 service
 
 =cut
 
-has 'route53' => ( is => 'rw', isa => 'Net::Amazon::Route53', required => 1, );
+has 'route53' => (is => 'rw', isa => 'Net::Amazon::Route53', required => 1,);
 
 =head3 id
 
@@ -51,11 +51,10 @@ Any Comment given when the zone is created
 
 =cut
 
-has 'id'   => ( is => 'rw', isa => 'Str', required => 1, default => '' );
-has 'name' => ( is => 'rw', isa => 'Str', required => 1, default => '' );
-has 'callerreference' =>
-  ( is => 'rw', isa => 'Str', required => 1, default => '' );
-has 'comment' => ( is => 'rw', isa => 'Str', required => 1, default => '' );
+has 'id'              => (is => 'rw', isa => 'Str', required => 1, default => '');
+has 'name'            => (is => 'rw', isa => 'Str', required => 1, default => '');
+has 'callerreference' => (is => 'rw', isa => 'Str', required => 1, default => '');
+has 'comment'         => (is => 'rw', isa => 'Str', required => 1, default => '');
 
 =head3 nameservers
 
@@ -68,15 +67,11 @@ has 'nameservers' => (
     isa     => 'ArrayRef[Str]',
     lazy    => 1,
     default => sub {
-        my $self = shift;
-        my $resp = $self->route53->request( 'get',
-            'https://route53.amazonaws.com/2010-10-01/' . $self->id );
-        my @nameservers =
-          map { decode_entities($_) }
-          @{ $resp->{DelegationSet}{NameServers}{NameServer} };
+        my $self        = shift;
+        my $resp        = $self->route53->request('get', 'https://route53.amazonaws.com/2010-10-01/' . $self->id);
+        my @nameservers = map {decode_entities($_)} @{ $resp->{DelegationSet}{NameServers}{NameServer} };
         \@nameservers;
-    }
-);
+    });
 
 =head3 resource_record_sets
 
@@ -91,31 +86,26 @@ has 'resource_record_sets' => (
     lazy    => 1,
     default => sub {
         my $self = shift;
-        my $resp = $self->route53->request( 'get',
-                'https://route53.amazonaws.com/2010-10-01/'
-              . $self->id
-              . '/rrset' );
+        my $resp = $self->route53->request('get', 'https://route53.amazonaws.com/2010-10-01/' . $self->id . '/rrset');
         my @resource_record_sets;
-        for my $res ( @{ $resp->{ResourceRecordSets}{ResourceRecordSet} } ) {
+        for my $res (@{ $resp->{ResourceRecordSets}{ResourceRecordSet} }) {
             push @resource_record_sets,
-              Net::Amazon::Route53::ResourceRecordSet->new(
+                Net::Amazon::Route53::ResourceRecordSet->new(
                 route53    => $self->route53,
                 hostedzone => $self,
-                name       => decode_entities( $res->{Name} ),
+                name       => decode_entities($res->{Name}),
                 ttl        => $res->{TTL},
-                type       => decode_entities( $res->{Type} ),
+                type       => decode_entities($res->{Type}),
                 values     => [
-                    map { decode_entities( $_->{Value} ) } @{
+                    map {decode_entities($_->{Value})} @{
                         ref $res->{ResourceRecords}{ResourceRecord} eq 'ARRAY'
                         ? $res->{ResourceRecords}{ResourceRecord}
-                        : [ $res->{ResourceRecords}{ResourceRecord} ]
-                      }
+                        : [ $res->{ResourceRecords}{ResourceRecord} ] }
                 ],
-              );
+                );
         }
         \@resource_record_sets;
-    }
-);
+    });
 
 =head2 METHODS
 
@@ -137,8 +127,7 @@ sub create {
     my $self = shift;
     my $wait = shift;
     $wait = 0 if !defined $wait;
-    $self->name =~ /\.$/
-      or die "Zone name needs to end in a dot, to be created\n";
+    $self->name =~ /\.$/ or die "Zone name needs to end in a dot, to be created\n";
     my $request_xml_str = <<'ENDXML';
 <?xml version="1.0" encoding="UTF-8"?>
 <CreateHostedZoneRequest xmlns="https://route53.amazonaws.com/doc/2010-10-01/">
@@ -149,27 +138,22 @@ sub create {
     </HostedZoneConfig>
 </CreateHostedZoneRequest>
 ENDXML
-    my $request_xml = sprintf( $request_xml_str,
-        map { $_ } $self->name,
-        $self->callerreference, $self->comment );
+    my $request_xml = sprintf($request_xml_str, map {$_} $self->name, $self->callerreference, $self->comment);
     my $resp = $self->route53->request(
         'post',
         'https://route53.amazonaws.com/2010-10-01/hostedzone',
         'content-type' => 'text/xml; charset=UTF-8',
         Content        => $request_xml,
     );
-    $self->id( $resp->{HostedZone}{Id} );
+    $self->id($resp->{HostedZone}{Id});
     my $change = Net::Amazon::Route53::Change->new(
         route53 => $self->route53,
-        (
-            map { lc($_) => decode_entities( $resp->{ChangeInfo}{$_} ) }
-              qw/Id Status SubmittedAt/
-        ),
+        (map {lc($_) => decode_entities($resp->{ChangeInfo}{$_})} qw/Id Status SubmittedAt/),
     );
     $change->refresh();
     return $change if !$wait;
 
-    while ( lc( $change->status ) ne 'insync' ) {
+    while (lc($change->status) ne 'insync') {
         sleep 2;
         $change->refresh();
     }
@@ -193,20 +177,14 @@ sub delete {
     my $self = shift;
     my $wait = shift;
     $wait = 0 if !defined $wait;
-    my $resp =
-      $self->route53->request( 'delete',
-        'https://route53.amazonaws.com/2010-10-01/' . $self->id,
-      );
+    my $resp = $self->route53->request('delete', 'https://route53.amazonaws.com/2010-10-01/' . $self->id,);
     my $change = Net::Amazon::Route53::Change->new(
         route53 => $self->route53,
-        (
-            map { lc($_) => decode_entities( $resp->{ChangeInfo}{$_} ) }
-              qw/Id Status SubmittedAt/
-        ),
+        (map {lc($_) => decode_entities($resp->{ChangeInfo}{$_})} qw/Id Status SubmittedAt/),
     );
     $change->refresh();
     return $change if !$wait;
-    while ( lc( $change->status ) ne 'insync' ) {
+    while (lc($change->status) ne 'insync') {
         sleep 2;
         $change->refresh();
     }

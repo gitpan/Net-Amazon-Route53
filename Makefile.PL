@@ -33,9 +33,11 @@ my %WriteMakefileArgs = (
     'MIME::Base64' => '0',
     'Mouse' => '0',
     'Pod::Usage' => '0',
-    'XML::Bare' => '0'
+    'XML::Bare' => '0',
+    'strict' => '0',
+    'warnings' => '0'
   },
-  'VERSION' => '0.111300',
+  'VERSION' => '0.113490',
   'test' => {
     'TESTS' => 't/*.t'
   }

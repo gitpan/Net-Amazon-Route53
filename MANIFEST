@@ -12,6 +12,7 @@ lib/Net/Amazon/Route53.pm
 lib/Net/Amazon/Route53/Change.pm
 lib/Net/Amazon/Route53/HostedZone.pm
 lib/Net/Amazon/Route53/ResourceRecordSet.pm
+lib/Net/Amazon/Route53/ResourceRecordSet/Change.pm
 t/00-load.t
 t/release-pod-coverage.t
 t/release-pod-syntax.t
