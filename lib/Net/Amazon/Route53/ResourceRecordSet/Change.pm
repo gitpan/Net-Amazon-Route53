@@ -3,7 +3,7 @@ use warnings;
 
 package Net::Amazon::Route53::ResourceRecordSet::Change;
 BEGIN {
-  $Net::Amazon::Route53::ResourceRecordSet::Change::VERSION = '0.113490';
+  $Net::Amazon::Route53::ResourceRecordSet::Change::VERSION = '0.113630';
 }
 use Mouse;
 extends "Net::Amazon::Route53::ResourceRecordSet";
@@ -40,7 +40,7 @@ has 'original_values' => (is => 'rw', isa => 'ArrayRef', required => 1, default 
 
 This method changes the value of a record from original_value X to value Y.
 
-    my $record = Net::Amazon::Route53::ResourceRecordSet->new(
+    my $record = Net::Amazon::Route53::ResourceRecordSet::Change->new(
         name            => "example.com",
         ttl             => 600,
         type            => "A",
@@ -60,31 +60,31 @@ sub change {
 <?xml version="1.0" encoding="UTF-8"?>
 <ChangeResourceRecordSetsRequest xmlns="https://route53.amazonaws.com/doc/2010-10-01/">
    <ChangeBatch>
-      <Comment>This change batch updates the %s record from original_values to values</Comment>
-      <Changes>
-        <Change>
-            <Action>DELETE</Action>
-            <ResourceRecordSet>
+     <Comment>This change batch updates the %s record from original_values to values</Comment>
+     <Changes>
+       <Change>
+           <Action>DELETE</Action>
+           <ResourceRecordSet>
                <Name>%s</Name>
                <Type>%s</Type>
                <TTL>%s</TTL>
                <ResourceRecords>
                   %s
                </ResourceRecords>
-            </ResourceRecordSet>
-         </Change>
-        <Change>
-            <Action>CREATE</Action>
-            <ResourceRecordSet>
+           </ResourceRecordSet>
+       </Change>
+       <Change>
+           <Action>CREATE</Action>
+           <ResourceRecordSet>
                <Name>%s</Name>
                <Type>%s</Type>
                <TTL>%s</TTL>
                <ResourceRecords>
                   %s
                </ResourceRecords>
-            </ResourceRecordSet>
-         </Change>
-        </Changes>
+           </ResourceRecordSet>
+       </Change>
+     </Changes>
    </ChangeBatch>
 </ChangeResourceRecordSetsRequest>
 ENDXML

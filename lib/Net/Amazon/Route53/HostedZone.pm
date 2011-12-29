@@ -3,7 +3,7 @@ use warnings;
 
 package Net::Amazon::Route53::HostedZone;
 BEGIN {
-  $Net::Amazon::Route53::HostedZone::VERSION = '0.113490';
+  $Net::Amazon::Route53::HostedZone::VERSION = '0.113630';
 }
 use Mouse;
 use HTML::Entities;
