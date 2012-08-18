@@ -2,8 +2,8 @@ use strict;
 use warnings;
 
 package Net::Amazon::Route53::HostedZone;
-BEGIN {
-  $Net::Amazon::Route53::HostedZone::VERSION = '0.113630';
+{
+  $Net::Amazon::Route53::HostedZone::VERSION = '0.122310';
 }
 use Mouse;
 use HTML::Entities;
@@ -51,10 +51,11 @@ Any Comment given when the zone is created
 
 =cut
 
-has 'id'              => (is => 'rw', isa => 'Str', required => 1, default => '');
-has 'name'            => (is => 'rw', isa => 'Str', required => 1, default => '');
-has 'callerreference' => (is => 'rw', isa => 'Str', required => 1, default => '');
-has 'comment'         => (is => 'rw', isa => 'Str', required => 1, default => '');
+has 'id'   => (is => 'rw', isa => 'Str', required => 1, default => '');
+has 'name' => (is => 'rw', isa => 'Str', required => 1, default => '');
+has 'callerreference' =>
+    (is => 'rw', isa => 'Str', required => 1, default => '');
+has 'comment' => (is => 'rw', isa => 'Str', required => 1, default => '');
 
 =head3 nameservers
 
@@ -67,9 +68,12 @@ has 'nameservers' => (
     isa     => 'ArrayRef[Str]',
     lazy    => 1,
     default => sub {
-        my $self        = shift;
-        my $resp        = $self->route53->request('get', 'https://route53.amazonaws.com/2010-10-01/' . $self->id);
-        my @nameservers = map {decode_entities($_)} @{ $resp->{DelegationSet}{NameServers}{NameServer} };
+        my $self = shift;
+        my $resp = $self->route53->request('get',
+            'https://route53.amazonaws.com/2010-10-01/' . $self->id);
+        my @nameservers =
+            map {decode_entities($_)}
+            @{ $resp->{DelegationSet}{NameServers}{NameServer} };
         \@nameservers;
     });
 
@@ -85,24 +89,36 @@ has 'resource_record_sets' => (
     isa     => 'ArrayRef',
     lazy    => 1,
     default => sub {
-        my $self = shift;
-        my $resp = $self->route53->request('get', 'https://route53.amazonaws.com/2010-10-01/' . $self->id . '/rrset');
+        my $self             = shift;
+        my $next_record_name = '';
         my @resource_record_sets;
-        for my $res (@{ $resp->{ResourceRecordSets}{ResourceRecordSet} }) {
-            push @resource_record_sets,
-                Net::Amazon::Route53::ResourceRecordSet->new(
-                route53    => $self->route53,
-                hostedzone => $self,
-                name       => decode_entities($res->{Name}),
-                ttl        => $res->{TTL},
-                type       => decode_entities($res->{Type}),
-                values     => [
-                    map {decode_entities($_->{Value})} @{
-                        ref $res->{ResourceRecords}{ResourceRecord} eq 'ARRAY'
-                        ? $res->{ResourceRecords}{ResourceRecord}
-                        : [ $res->{ResourceRecords}{ResourceRecord} ] }
-                ],
-                );
+        while (1) {
+            my $resp = $self->route53->request('get',
+                      'https://route53.amazonaws.com/2010-10-01/'
+                    . $self->id
+                    . '/rrset?maxitems=100'
+                    . $next_record_name);
+            my $set = $resp->{ResourceRecordSets}{ResourceRecordSet};
+            my @results = ref($set) eq 'ARRAY' ? @$set : ($set);
+            for my $res (@results) {
+                push @resource_record_sets,
+                    Net::Amazon::Route53::ResourceRecordSet->new(
+                    route53    => $self->route53,
+                    hostedzone => $self,
+                    name       => decode_entities($res->{Name}),
+                    ttl        => $res->{TTL} || 0,
+                    type       => decode_entities($res->{Type}),
+                    values     => [
+                        map {decode_entities($_->{Value})} @{
+                            ref $res->{ResourceRecords}{ResourceRecord} eq
+                                'ARRAY'
+                            ? $res->{ResourceRecords}{ResourceRecord}
+                            : [ $res->{ResourceRecords}{ResourceRecord} ] }
+                    ],
+                    );
+            }
+            last unless $resp->{NextRecordName};
+            $next_record_name = '&name=' . $resp->{NextRecordName};
         }
         \@resource_record_sets;
     });
@@ -127,7 +143,8 @@ sub create {
     my $self = shift;
     my $wait = shift;
     $wait = 0 if !defined $wait;
-    $self->name =~ /\.$/ or die "Zone name needs to end in a dot, to be created\n";
+    $self->name =~ /\.$/
+        or die "Zone name needs to end in a dot, to be created\n";
     my $request_xml_str = <<'ENDXML';
 <?xml version="1.0" encoding="UTF-8"?>
 <CreateHostedZoneRequest xmlns="https://route53.amazonaws.com/doc/2010-10-01/">
@@ -138,7 +155,9 @@ sub create {
     </HostedZoneConfig>
 </CreateHostedZoneRequest>
 ENDXML
-    my $request_xml = sprintf($request_xml_str, map {$_} $self->name, $self->callerreference, $self->comment);
+    my $request_xml = sprintf($request_xml_str,
+        map {$_} $self->name,
+        $self->callerreference, $self->comment);
     my $resp = $self->route53->request(
         'post',
         'https://route53.amazonaws.com/2010-10-01/hostedzone',
@@ -148,7 +167,10 @@ ENDXML
     $self->id($resp->{HostedZone}{Id});
     my $change = Net::Amazon::Route53::Change->new(
         route53 => $self->route53,
-        (map {lc($_) => decode_entities($resp->{ChangeInfo}{$_})} qw/Id Status SubmittedAt/),
+        (
+            map {lc($_) => decode_entities($resp->{ChangeInfo}{$_})}
+                qw/Id Status SubmittedAt/
+        ),
     );
     $change->refresh();
     return $change if !$wait;
@@ -177,10 +199,16 @@ sub delete {
     my $self = shift;
     my $wait = shift;
     $wait = 0 if !defined $wait;
-    my $resp = $self->route53->request('delete', 'https://route53.amazonaws.com/2010-10-01/' . $self->id,);
+    my $resp =
+        $self->route53->request('delete',
+        'https://route53.amazonaws.com/2010-10-01/' . $self->id,
+        );
     my $change = Net::Amazon::Route53::Change->new(
         route53 => $self->route53,
-        (map {lc($_) => decode_entities($resp->{ChangeInfo}{$_})} qw/Id Status SubmittedAt/),
+        (
+            map {lc($_) => decode_entities($resp->{ChangeInfo}{$_})}
+                qw/Id Status SubmittedAt/
+        ),
     );
     $change->refresh();
     return $change if !$wait;

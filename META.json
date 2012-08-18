@@ -4,7 +4,7 @@
       "Marco Fontani"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Dist::Zilla version 4.200012, CPAN::Meta::Converter version 2.112150",
+   "generated_by" : "Dist::Zilla version 4.300021, CPAN::Meta::Converter version 2.120921",
    "license" : [
       "perl_5"
    ],
@@ -21,23 +21,24 @@
       },
       "runtime" : {
          "requires" : {
-            "Digest::HMAC_SHA1" : 0,
-            "FindBin" : 0,
-            "Getopt::Long" : 0,
-            "HTML::Entities" : 0,
-            "HTTP::Request" : 0,
-            "LWP::UserAgent" : 0,
-            "MIME::Base64" : 0,
-            "Mouse" : 0,
-            "Pod::Usage" : 0,
-            "XML::Bare" : 0,
-            "strict" : 0,
-            "warnings" : 0
+            "Digest::HMAC_SHA1" : "0",
+            "FindBin" : "0",
+            "Getopt::Long" : "0",
+            "HTML::Entities" : "0",
+            "HTTP::Request" : "0",
+            "LWP::UserAgent" : "0",
+            "MIME::Base64" : "0",
+            "Mouse" : "0",
+            "Pod::Usage" : "0",
+            "XML::Bare" : "0",
+            "strict" : "0",
+            "warnings" : "0"
          }
       },
       "test" : {
          "requires" : {
-            "Test::More" : 0
+            "Test::Exception" : "0",
+            "Test::More" : "0"
          }
       }
    },
@@ -52,6 +53,6 @@
          "web" : "https://github.com/mfontani/Net-Amazon-Route53"
       }
    },
-   "version" : "0.113630"
+   "version" : "0.122310"
 }
 

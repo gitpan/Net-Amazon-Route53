@@ -2,8 +2,8 @@ use strict;
 use warnings;
 
 package Net::Amazon::Route53;
-BEGIN {
-  $Net::Amazon::Route53::VERSION = '0.113630';
+{
+  $Net::Amazon::Route53::VERSION = '0.122310';
 }
 use LWP::UserAgent;
 use HTTP::Request;
@@ -88,7 +88,8 @@ sub request {
     my $uri    = shift;
 
     return unless $method;
-    return unless ($method eq 'get' or $method eq 'post' or $method eq 'delete');
+    return
+        unless ($method eq 'get' or $method eq 'post' or $method eq 'delete');
     return unless $uri;
 
     # Get amazon server's date
@@ -104,12 +105,19 @@ sub request {
 
     my %options = (
         'Date'                 => $date,
-        'X-Amzn-Authorization' => sprintf("AWS3-HTTPS AWSAccessKeyId=%s,Algorithm=HmacSHA1,Signature=%s", $self->id, $signature),
+        'X-Amzn-Authorization' => sprintf(
+            "AWS3-HTTPS AWSAccessKeyId=%s,Algorithm=HmacSHA1,Signature=%s",
+            $self->id, $signature
+        ),
         @_
     );
     my $content = delete $options{Content};
-    my $request = HTTP::Request->new(uc $method, $uri, [ map {$_ => $options{$_}} keys %options ], $content ? $content : undef,);
-    my $rc      = $self->ua->request($request);
+    my $request = HTTP::Request->new(
+        uc $method, $uri,
+        [ map {$_ => $options{$_}} keys %options ],
+        $content ? $content : undef,
+    );
+    my $rc = $self->ua->request($request);
     die "Could not perform request $method on $uri: "
         . $rc->status_line . "\n"
         . $rc->decoded_content . "\n"
@@ -142,7 +150,9 @@ sub get_hosted_zones {
     my $start_marker = '';
     my @zones;
     while (1) {
-        my $resp = $self->request('get', 'https://route53.amazonaws.com/2010-10-01/hostedzone?maxitems=100' . $start_marker);
+        my $resp = $self->request('get',
+            'https://route53.amazonaws.com/2010-10-01/hostedzone?maxitems=100'
+                . $start_marker);
         push @zones,
             (
             ref $resp->{HostedZones}{HostedZone} eq 'ARRAY'
@@ -157,7 +167,10 @@ sub get_hosted_zones {
             Net::Amazon::Route53::HostedZone->new(
             route53 => $self,
             (map {lc($_) => $zone->{$_}} qw/Id Name CallerReference/),
-            comment => (exists $zone->{Config} and ref $zone->{Config} eq 'HASH') ? $zone->{Config}{Comment} : '',
+            comment =>
+                (exists $zone->{Config} and ref $zone->{Config} eq 'HASH')
+            ? $zone->{Config}{Comment}
+            : '',
             );
     }
     @o_zones = grep {$_->name eq $which} @o_zones if $which;
@@ -191,7 +204,8 @@ sub batch_create {
     die "Your batch is not an arrayref" unless ref($batch) eq 'ARRAY';
     my @invalid =
         grep {!($_->isa("Net::Amazon::Route53::ResourceRecordSet"))} @$batch;
-    die "Your batch is not an arrayref of Net::Amazon::Route53::ResourceRecordSets"
+    die
+        "Your batch is not an arrayref of Net::Amazon::Route53::ResourceRecordSets"
         if scalar(@invalid);
 
     my $hostedzone_id = $batch->[ 0 ]->hostedzone->id;
@@ -204,18 +218,25 @@ sub batch_create {
     my $batch_xml = $self->_batch_request_header;
 
     for my $rr (@$batch) {
-        $rr->name =~ /\.$/ or die "Zone name needs to end in a dot, to be created\n";
+        $rr->name =~ /\.$/
+            or die "Zone name needs to end in a dot, to be created\n";
         my $change_xml = $self->_get_create_xml($rr);
         $batch_xml .= $change_xml;
     }
 
     $batch_xml .= $self->_batch_request_footer;
 
-    my $resp =
-        $self->request('post', 'https://route53.amazonaws.com/2010-10-01/' . $hostedzone_id . '/rrset', Content => $batch_xml);
+    my $resp = $self->request(
+        'post',
+        'https://route53.amazonaws.com/2010-10-01/' . $hostedzone_id . '/rrset',
+        Content => $batch_xml
+    );
     my $change = Net::Amazon::Route53::Change->new(
         route53 => $self,
-        (map {lc($_) => decode_entities($resp->{ChangeInfo}{$_})} qw/Id Status SubmittedAt/),
+        (
+            map {lc($_) => decode_entities($resp->{ChangeInfo}{$_})}
+                qw/Id Status SubmittedAt/
+        ),
     );
     $change->refresh();
     return $change if !$wait;
@@ -268,13 +289,16 @@ sub atomic_update {
     for my $rrset (($original, $new)) {
         die "A record set is not an arrayref" unless ref($rrset) eq 'ARRAY';
         my @invalid =
-            grep {!($_->isa("Net::Amazon::Route53::ResourceRecordSet"))} @$rrset;
-        die "A record set is not an arrayref of Net::Amazon::Route53::ResourceRecordSets"
+            grep {!($_->isa("Net::Amazon::Route53::ResourceRecordSet"))}
+            @$rrset;
+        die
+            "A record set is not an arrayref of Net::Amazon::Route53::ResourceRecordSets"
             if scalar(@invalid);
     }
 
     my $hostedzone_id = $original->[ 0 ]->hostedzone->id;
-    my @wrong_zone = grep {$_->hostedzone->id ne $hostedzone_id} (@$original, @$new);
+    my @wrong_zone =
+        grep {$_->hostedzone->id ne $hostedzone_id} (@$original, @$new);
     die "A record set contains records from different hosted zones"
         if scalar(@wrong_zone);
 
@@ -283,8 +307,10 @@ sub atomic_update {
     my %original    = map {$_->name . '-' . $_->type => 1} @$original;
     my %new         = map {$_->name . '-' . $_->type => 1} @$new;
     my %new_records = map {$_->name . '-' . $_->type => $_} @$new;
-    my @creates   = grep {!(defined $original{ $_->name . '-' . $_->type })} @$new;
-    my @deletions = grep {!(defined $new{ $_->name . '-' . $_->type })} @$original;
+    my @creates =
+        grep {!(defined $original{ $_->name . '-' . $_->type })} @$new;
+    my @deletions =
+        grep {!(defined $new{ $_->name . '-' . $_->type })} @$original;
     my %deleted = map {$_->name . '-' . $_->type => 1} @deletions;
     my @changes = grep {defined $new{ $_->name . '-' . $_->type }}
         grep {!(defined $deleted{ $_->name . '-' . $_->type })} @$original;
@@ -299,35 +325,53 @@ sub atomic_update {
             values          => $new_records{ $_->name . '-' . $_->type }->values
             )
         }
-        grep {join(',', @{ $_->values }) ne join(',', @{ $new_records{ $_->name . '-' . $_->type }->values })} @changes;
+        grep {
+        join(',', @{ $_->values }) ne
+            join(',', @{ $new_records{ $_->name . '-' . $_->type }->values })
+        } @changes;
 
     my $batch_xml = $self->_batch_request_header;
 
+    # Do not attempt to push an empty changeset
+    return Net::Amazon::Route53::Change->new(
+        route53 => $self,
+        status  => 'NOOP'
+    ) if @change_objects + @deletions + @creates < 1;
+
     for my $rr (@change_objects) {
-        $rr->name =~ /\.$/ or die "Zone name needs to end in a dot, to be changed\n";
+        $rr->name =~ /\.$/
+            or die "Zone name needs to end in a dot, to be changed\n";
         my $change_xml = $self->_get_change_xml($rr);
         $batch_xml .= $change_xml;
     }
 
     for my $rr (@deletions) {
-        $rr->name =~ /\.$/ or die "Zone name needs to end in a dot, to be deleted\n";
+        $rr->name =~ /\.$/
+            or die "Zone name needs to end in a dot, to be deleted\n";
         my $change_xml = $self->_get_delete_xml($rr);
         $batch_xml .= $change_xml;
     }
 
     for my $rr (@creates) {
-        $rr->name =~ /\.$/ or die "Zone name needs to end in a dot, to be created\n";
+        $rr->name =~ /\.$/
+            or die "Zone name needs to end in a dot, to be created\n";
         my $change_xml = $self->_get_create_xml($rr);
         $batch_xml .= $change_xml;
     }
 
     $batch_xml .= $self->_batch_request_footer;
 
-    my $resp =
-        $self->request('post', 'https://route53.amazonaws.com/2010-10-01/' . $hostedzone_id . '/rrset', Content => $batch_xml);
+    my $resp = $self->request(
+        'post',
+        'https://route53.amazonaws.com/2010-10-01/' . $hostedzone_id . '/rrset',
+        Content => $batch_xml
+    );
     my $change = Net::Amazon::Route53::Change->new(
         route53 => $self,
-        (map {lc($_) => decode_entities($resp->{ChangeInfo}{$_})} qw/Id Status SubmittedAt/),
+        (
+            map {lc($_) => decode_entities($resp->{ChangeInfo}{$_})}
+                qw/Id Status SubmittedAt/
+        ),
     );
     $change->refresh();
     return $change if !$wait;
@@ -360,8 +404,10 @@ sub batch_change {
 
     die "Your batch is not an arrayref" unless ref($batch) eq 'ARRAY';
     my @invalid =
-        grep {!($_->isa("Net::Amazon::Route53::ResourceRecordSet::Change"))} @$batch;
-    die "Your batch is not an arrayref of Net::Amazon::Route53::ResourceRecordSet::Changes"
+        grep {!($_->isa("Net::Amazon::Route53::ResourceRecordSet::Change"))}
+        @$batch;
+    die
+        "Your batch is not an arrayref of Net::Amazon::Route53::ResourceRecordSet::Changes"
         if scalar(@invalid);
 
     my $hostedzone_id = $batch->[ 0 ]->hostedzone->id;
@@ -374,18 +420,25 @@ sub batch_change {
     my $batch_xml = $self->_batch_request_header;
 
     for my $rr (@$batch) {
-        $rr->name =~ /\.$/ or die "Zone name needs to end in a dot, to be created\n";
+        $rr->name =~ /\.$/
+            or die "Zone name needs to end in a dot, to be created\n";
         my $change_xml = $self->_get_change_xml($rr);
         $batch_xml .= $change_xml;
     }
 
     $batch_xml .= $self->_batch_request_footer;
 
-    my $resp =
-        $self->request('post', 'https://route53.amazonaws.com/2010-10-01/' . $hostedzone_id . '/rrset', Content => $batch_xml);
+    my $resp = $self->request(
+        'post',
+        'https://route53.amazonaws.com/2010-10-01/' . $hostedzone_id . '/rrset',
+        Content => $batch_xml
+    );
     my $change = Net::Amazon::Route53::Change->new(
         route53 => $self,
-        (map {lc($_) => decode_entities($resp->{ChangeInfo}{$_})} qw/Id Status SubmittedAt/),
+        (
+            map {lc($_) => decode_entities($resp->{ChangeInfo}{$_})}
+                qw/Id Status SubmittedAt/
+        ),
     );
     $change->refresh();
     return $change if !$wait;
@@ -420,10 +473,14 @@ sub _get_create_xml {
          </Change>
 ENDXML
 
-    my $create_xml = sprintf($create_xml_str,
+    my $create_xml = sprintf(
+        $create_xml_str,
         map {$_} $record->name,
-        $record->type, $record->ttl,
-        join("\n", map {"<ResourceRecord><Value>" . $_ . "</Value></ResourceRecord>"} @{ $record->values }));
+        $record->type,
+        $record->ttl,
+        join("\n",
+            map {"<ResourceRecord><Value>" . $_ . "</Value></ResourceRecord>"}
+                @{ $record->values }));
 
     return $create_xml;
 }
@@ -452,10 +509,14 @@ sub _get_delete_xml {
          </Change>
 ENDXML
 
-    my $delete_xml = sprintf($delete_xml_str,
+    my $delete_xml = sprintf(
+        $delete_xml_str,
         map {$_} $record->name,
-        $record->type, $record->ttl,
-        join("\n", map {"<ResourceRecord><Value>" . $_ . "</Value></ResourceRecord>"} @{ $record->values }));
+        $record->type,
+        $record->ttl,
+        join("\n",
+            map {"<ResourceRecord><Value>" . $_ . "</Value></ResourceRecord>"}
+                @{ $record->values }));
 
     return $delete_xml;
 }
@@ -495,11 +556,16 @@ sub _get_change_xml {
         </Change>
 ENDXML
 
-    my $change_xml = sprintf($change_xml_str,
+    my $change_xml = sprintf(
+        $change_xml_str,
         (map {$_} ($record->name, $record->type, $record->ttl,)),
-        join("\n", map {"<ResourceRecord><Value>" . $_ . "</Value></ResourceRecord>"} @{ $record->original_values }),
+        join("\n",
+            map {"<ResourceRecord><Value>" . $_ . "</Value></ResourceRecord>"}
+                @{ $record->original_values }),
         (map {$_} ($record->name, $record->type, $record->ttl,)),
-        join("\n", map {"<ResourceRecord><Value>" . $_ . "</Value></ResourceRecord>"} @{ $record->values }));
+        join("\n",
+            map {"<ResourceRecord><Value>" . $_ . "</Value></ResourceRecord>"}
+                @{ $record->values }));
     return $change_xml;
 }
 
