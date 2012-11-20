@@ -3,7 +3,7 @@ use warnings;
 
 package Net::Amazon::Route53::Change;
 {
-  $Net::Amazon::Route53::Change::VERSION = '0.122310';
+  $Net::Amazon::Route53::Change::VERSION = '0.123250';
 }
 use Mouse;
 use HTML::Entities;

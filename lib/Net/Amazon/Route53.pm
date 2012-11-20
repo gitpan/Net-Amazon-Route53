@@ -3,7 +3,7 @@ use warnings;
 
 package Net::Amazon::Route53;
 {
-  $Net::Amazon::Route53::VERSION = '0.122310';
+  $Net::Amazon::Route53::VERSION = '0.123250';
 }
 use LWP::UserAgent;
 use HTTP::Request;

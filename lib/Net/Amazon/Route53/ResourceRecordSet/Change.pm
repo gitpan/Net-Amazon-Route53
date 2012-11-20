@@ -3,10 +3,11 @@ use warnings;
 
 package Net::Amazon::Route53::ResourceRecordSet::Change;
 {
-  $Net::Amazon::Route53::ResourceRecordSet::Change::VERSION = '0.122310';
+  $Net::Amazon::Route53::ResourceRecordSet::Change::VERSION = '0.123250';
 }
 use Mouse;
 extends "Net::Amazon::Route53::ResourceRecordSet";
+use HTML::Entities;
 
 =head2 SYNOPSIS
 
